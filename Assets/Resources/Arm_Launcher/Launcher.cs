@@ -16,6 +16,9 @@ public class Launcher : MonoBehaviour
     [SerializeField]
     private Component RightHandAnchor;
 
+    [SerializeField]
+    private TextMeshPro ChargeIndicator;
+
     private Vector3 BaseOrigin = new Vector3(0, 0, 0);
     private Vector3 inner = new Vector3(0.01097f, 0.0f, 0.0f);
     private Vector3 outer = new Vector3(0.01592f, 0.0f, 0.0f);
@@ -25,13 +28,14 @@ public class Launcher : MonoBehaviour
     private bool IsCharging = false;
 
     private float ChargeLevel = 0;
+    private float padding = 0.01f;
 
 
 
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
@@ -63,5 +67,7 @@ public class Launcher : MonoBehaviour
             LauncherBase.transform.localPosition = BaseOrigin;
             Platform.transform.localPosition = outer;
         }
+
+        ChargeIndicator.text = ((ChargeLevel*100) + 0.01f).ToString("F0")  + "%";
     }
 }
