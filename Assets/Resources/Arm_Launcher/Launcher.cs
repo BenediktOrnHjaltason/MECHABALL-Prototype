@@ -70,4 +70,14 @@ public class Launcher : MonoBehaviour
 
         ChargeIndicator.text = ((ChargeLevel*100) + 0.01f).ToString("F0")  + "%";
     }
+
+
+    public void ShootBall(Collider other)
+    {
+        Rigidbody rb = other.attachedRigidbody;
+        other.GetComponent<Ball>().states = Ball.States.FREE;
+        rb.useGravity = true;
+
+        rb.AddForce(transform.forward * (500.0f + (ChargeLevel * 1000)));
+    }
 }

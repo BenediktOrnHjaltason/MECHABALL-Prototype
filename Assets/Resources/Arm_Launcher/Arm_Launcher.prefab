@@ -105,6 +105,8 @@ GameObject:
   - component: {fileID: 5900793975688537608}
   - component: {fileID: 6281912405946666776}
   - component: {fileID: 1556096602447984448}
+  - component: {fileID: 4140997293470567973}
+  - component: {fileID: 2913680380316928864}
   m_Layer: 8
   m_Name: LauncherTrigger
   m_TagString: Untagged
@@ -186,6 +188,35 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!54 &4140997293470567973
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3184159650458810726}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &2913680380316928864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3184159650458810726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99d45ed1b4ec2d04da04d9af85746b8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Parent: {fileID: 8537829934965020767}
 --- !u!1 &5176665081609972113
 GameObject:
   m_ObjectHideFlags: 0
