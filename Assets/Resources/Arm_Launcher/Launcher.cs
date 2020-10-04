@@ -19,17 +19,26 @@ public class Launcher : MonoBehaviour
     [SerializeField]
     private TextMeshPro ChargeIndicator;
 
-    private Vector3 BaseOrigin = new Vector3(0, 0, 0);
-    private Vector3 inner = new Vector3(0.01097f, 0.0f, 0.0f);
-    private Vector3 outer = new Vector3(0.01592f, 0.0f, 0.0f);
-    private float ShakeOffsett = 0.0f;
+    Vector3 BaseOrigin = new Vector3(0, 0, 0);
+    Vector3 inner = new Vector3(0.01097f, 0.0f, 0.0f);
+    Vector3 outer = new Vector3(0.01592f, 0.0f, 0.0f);
+    float ShakeOffsett = 0.0f;
 
+    bool IsCharging = false;
+    bool JustReleasedCharge = false;
 
-    private bool IsCharging = false;
+    //The value used to increment charge and display on launcher
+    float ChargeLevel = 0;
 
-    private float ChargeLevel = 0;
-    private float padding = 0.01f;
+    //The value that is actually used in the impulse vector calculation
+    float ChargeAtRelease = 0;
 
+    //The time when window of adding charge power is over
+    float ReleaseStopTime = 0;
+
+    //Platform is placed on outer position instantaneously when charge is released. 
+    //Release duration is to fake an actual forward thrust that takes time.
+    const float ReleaseDuration = 0.2f; 
 
 
     // Start is called before the first frame update
@@ -46,14 +55,22 @@ public class Launcher : MonoBehaviour
 
 
         if (OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger)) IsCharging = true;
-        if (OVRInput.GetUp(OVRInput.Button.SecondaryIndexTrigger))   IsCharging = false;
+
+        if (OVRInput.GetUp(OVRInput.Button.SecondaryIndexTrigger))
+        {
+            IsCharging = false;
+            JustReleasedCharge = true;
+
+            LauncherBase.transform.localPosition = BaseOrigin;
+            
+        }
 
         if (IsCharging)
         {
             if (ChargeLevel < 0.99) ChargeLevel += 0.01f;
 
 
-            //Set charge shake whenever its charged
+            //Set charge shake whenever its charging
             ShakeOffsett = (Mathf.Sin(Time.time * 1000) * ChargeLevel) / 70;
             LauncherBase.transform.localPosition = new Vector3(ShakeOffsett,
                                                                -ShakeOffsett,
@@ -61,11 +78,26 @@ public class Launcher : MonoBehaviour
             Platform.transform.localPosition = Vector3.Lerp(outer, inner, ChargeLevel);
         }
 
-        else
+        else 
         {
-            ChargeLevel = 0;
-            LauncherBase.transform.localPosition = BaseOrigin;
-            Platform.transform.localPosition = outer;
+            //Handle release time
+            if (JustReleasedCharge)
+            {
+                if (ChargeLevel > 0)
+                {
+                    ChargeAtRelease = ChargeLevel;
+                    ChargeLevel = 0;
+                    ReleaseStopTime = Time.time + ReleaseDuration;
+                    Platform.transform.localPosition = outer;
+                }
+
+                else if (Time.time < ReleaseStopTime)
+                {
+                    ChargeAtRelease = 0;
+                    Debug.Log("In release time window " + Time.time);
+                }
+                else JustReleasedCharge = false;
+            }
         }
 
         ChargeIndicator.text = ((ChargeLevel*100) + 0.01f).ToString("F0")  + "%";
@@ -74,10 +106,6 @@ public class Launcher : MonoBehaviour
 
     public void ShootBall(Collider other)
     {
-        Rigidbody rb = other.attachedRigidbody;
-        other.GetComponent<Ball>().states = Ball.States.FREE;
-        rb.useGravity = true;
-
-        rb.AddForce(transform.forward * (500.0f + (ChargeLevel * 1000)));
+        other.GetComponent<Ball>().Shoot(transform.forward * (100.0f + (ChargeAtRelease * 1000)));
     }
 }

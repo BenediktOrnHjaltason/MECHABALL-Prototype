@@ -4,13 +4,17 @@ using UnityEngine;
 
 public class PlatformTrigger : MonoBehaviour
 {
+
+    /// <summary>
+    /// Top-level script for launcher arm
+    /// </summary>
     [SerializeField]
-    Launcher ParentLauncherScript;
+    Launcher Launcher;
 
     // Start is called before the first frame update
     void Start()
     {
-        ParentLauncherScript = GetComponentInParent<Launcher>();   
+        Launcher = GetComponentInParent<Launcher>();   
     }
 
     // Update is called once per frame
@@ -21,7 +25,6 @@ public class PlatformTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Colliding with something");
-        ParentLauncherScript.ShootBall(other);
+        if (other.gameObject.layer.Equals(9)) Launcher.ShootBall(other);
     }
 }
