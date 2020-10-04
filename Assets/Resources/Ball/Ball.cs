@@ -75,7 +75,12 @@ public class Ball : MonoBehaviour
 
     public void Shoot(Vector3 Impulse)
     {
-        SetState(EBallState.FREE);
-        rb.AddForce(Impulse);
+        if (state != EBallState.FREE)
+        {
+            Debug.Log("Shoot called for ball");
+
+            SetState(EBallState.FREE);
+            rb.AddForce(Impulse);
+        }
     }
 }

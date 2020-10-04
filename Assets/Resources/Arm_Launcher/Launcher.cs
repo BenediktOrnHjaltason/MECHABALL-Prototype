@@ -58,11 +58,20 @@ public class Launcher : MonoBehaviour
 
         if (OVRInput.GetUp(OVRInput.Button.SecondaryIndexTrigger))
         {
+
+            ChargeAtRelease = ChargeLevel;
+
+            Debug.Log("ChargeLevel at release time");
+
             IsCharging = false;
             JustReleasedCharge = true;
 
             LauncherBase.transform.localPosition = BaseOrigin;
-            
+
+            ChargeLevel = 0;
+            ReleaseStopTime = Time.time + ReleaseDuration;
+            Platform.transform.localPosition = outer;
+
         }
 
         if (IsCharging)
@@ -81,22 +90,10 @@ public class Launcher : MonoBehaviour
         else 
         {
             //Handle release time
-            if (JustReleasedCharge)
+            if (JustReleasedCharge && Time.time > ReleaseStopTime)
             {
-                if (ChargeLevel > 0)
-                {
-                    ChargeAtRelease = ChargeLevel;
-                    ChargeLevel = 0;
-                    ReleaseStopTime = Time.time + ReleaseDuration;
-                    Platform.transform.localPosition = outer;
-                }
-
-                else if (Time.time < ReleaseStopTime)
-                {
-                    ChargeAtRelease = 0;
-                    Debug.Log("In release time window " + Time.time);
-                }
-                else JustReleasedCharge = false;
+                ChargeAtRelease = 0;
+                JustReleasedCharge = false;
             }
         }
 
@@ -106,6 +103,6 @@ public class Launcher : MonoBehaviour
 
     public void ShootBall(Collider other)
     {
-        other.GetComponent<Ball>().Shoot(transform.forward * (100.0f + (ChargeAtRelease * 1000)));
+        other.GetComponent<Ball>().Shoot(transform.forward * (100.0f + (ChargeAtRelease * 2000)));
     }
 }
