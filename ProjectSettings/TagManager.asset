@@ -16,8 +16,8 @@ TagManager:
   - LauncherTrigger
   - Ball
   - Block
-  - 
-  - 
+  - LauncherAttractLockCollider
+  - Player
   - 
   - 
   - 

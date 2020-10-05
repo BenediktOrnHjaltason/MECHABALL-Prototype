@@ -10,8 +10,8 @@ public class Ball : MonoBehaviour
     {
         STARTHOVER,
         STARTSHOOTUP,
+        ATTRACTTOPLAYER,
         FREE
-
     }
 
     Rigidbody rb;
@@ -70,6 +70,14 @@ public class Ball : MonoBehaviour
                     state = newState;
                     break;
                 }
+
+            case EBallState.ATTRACTTOPLAYER:
+            {
+                    rb.useGravity = false;
+
+                    state = newState;
+                    break;
+            }
         }
     }
 
@@ -77,10 +85,13 @@ public class Ball : MonoBehaviour
     {
         if (state != EBallState.FREE)
         {
-            Debug.Log("Shoot called for ball");
-
             SetState(EBallState.FREE);
             rb.AddForce(Impulse);
         }
+    }
+
+    public void AttractToPlayer(Vector3 Force)
+    {
+        rb.AddForce(Force);
     }
 }

@@ -2,10 +2,24 @@
 using System.Collections.Generic;
 using System.Security.Policy;
 using TMPro;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class Launcher : MonoBehaviour
 {
+
+    enum EAttractState
+    {
+        LOCKING,
+        ATTRACTING,
+        NONE
+    }
+
+    EAttractState AttractState;
+    RaycastHit HitBall;
+    Ball LockedBall;
+
+    LineRenderer LockOnLine;
 
     [SerializeField]
     private GameObject LauncherBase;
@@ -44,24 +58,22 @@ public class Launcher : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        AttractState = EAttractState.NONE;
+        LockOnLine = GetComponent<LineRenderer>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        transform.position = RightHandAnchor.transform.position;
-        transform.rotation = RightHandAnchor.transform.rotation;
 
+        transform.SetPositionAndRotation(RightHandAnchor.transform.position, RightHandAnchor.transform.rotation);
 
+        //Trigger button
         if (OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger)) IsCharging = true;
 
         if (OVRInput.GetUp(OVRInput.Button.SecondaryIndexTrigger))
         {
-
             ChargeAtRelease = ChargeLevel;
-
-            Debug.Log("ChargeLevel at release time");
 
             IsCharging = false;
             JustReleasedCharge = true;
@@ -71,21 +83,73 @@ public class Launcher : MonoBehaviour
             ChargeLevel = 0;
             ReleaseStopTime = Time.time + ReleaseDuration;
             Platform.transform.localPosition = outer;
-
         }
 
-        if (IsCharging)
+        //------------------Attract
+
+        //Grip button
+        if (OVRInput.GetDown(OVRInput.Button.SecondaryHandTrigger)) AttractState = EAttractState.LOCKING;
+
+
+        if (OVRInput.GetUp(OVRInput.Button.SecondaryHandTrigger)) AttractState = EAttractState.NONE;
+
+        //Look for lock hit
+        if (AttractState == EAttractState.LOCKING)
         {
+            //Draw line to aim
+            LockOnLine.enabled = true;
+            LockOnLine.SetPosition(0, transform.position);
+            LockOnLine.SetPosition(1, transform.position + transform.forward * 700);
+
+            //If locked on ball
+            if (Physics.Raycast(transform.position, transform.forward, out HitBall, Mathf.Infinity, 1 << 11))
+            {
+                //Ball
+                LockedBall = HitBall.transform.GetComponentInParent<Ball>();
+                LockedBall.SetState(Ball.EBallState.ATTRACTTOPLAYER);
+
+                //Launcher
+                AttractState = EAttractState.ATTRACTING;
+                LockOnLine.enabled = false;
+            }
+        }
+
+        else if (AttractState == EAttractState.ATTRACTING && LockedBall)
+        {
+            LockedBall.AttractToPlayer((transform.position - LockedBall.transform.position).normalized * 10);
+        }
+
+        else if (AttractState == EAttractState.NONE)
+        {
+            if(LockedBall)
+            {
+                LockedBall.SetState(Ball.EBallState.FREE);
+                LockedBall = null;
+            }
+
+            LockOnLine.enabled = false;
+        }
+
+
+
+
+        //------------------/Attract
+
+
+        //------------------Launch
+
+        if (IsCharging)
+         {
             if (ChargeLevel < 0.99) ChargeLevel += 0.01f;
 
 
             //Set charge shake whenever its charging
             ShakeOffsett = (Mathf.Sin(Time.time * 1000) * ChargeLevel) / 70;
             LauncherBase.transform.localPosition = new Vector3(ShakeOffsett,
-                                                               -ShakeOffsett,
-                                                               0.0f);
+                                                                -ShakeOffsett,
+                                                                0.0f);
             Platform.transform.localPosition = Vector3.Lerp(outer, inner, ChargeLevel);
-        }
+         }
 
         else 
         {
@@ -100,6 +164,7 @@ public class Launcher : MonoBehaviour
         ChargeIndicator.text = ((ChargeLevel*100) + 0.01f).ToString("F0")  + "%";
     }
 
+    //------------------/Launch
 
     public void ShootBall(Collider other)
     {
