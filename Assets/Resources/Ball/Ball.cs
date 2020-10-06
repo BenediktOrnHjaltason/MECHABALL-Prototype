@@ -1,8 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-
+using UnityEngine.Rendering;
 
 public class Ball : MonoBehaviour
 {
@@ -23,6 +22,11 @@ public class Ball : MonoBehaviour
     EBallState state;
 
     Vector3 HoverCenter;
+
+    bool RecentlyShot = false;
+
+    float NextShot;
+
 
 
     // Start is called before the first frame update
@@ -66,6 +70,7 @@ public class Ball : MonoBehaviour
                 {
                     
                     rb.useGravity = true;
+                    rb.drag = 0;
 
                     state = newState;
                     break;
@@ -81,17 +86,29 @@ public class Ball : MonoBehaviour
         }
     }
 
-    public void Shoot(Vector3 Impulse)
+    public void Shoot(Vector3 Impulse, float ChargeAtRelease)
     {
-        if (state != EBallState.FREE)
+        
+        //Because overlaps register multiple times per shot. TODO: Find smarte solution for this later
+        if (Time.time > NextShot)
         {
+            NextShot = Time.time + 0.2f;
+
             SetState(EBallState.FREE);
+            rb.velocity = new Vector3(0, 0, 0);
             rb.AddForce(Impulse);
+
+            //Debug.Log("Ball shot with impulse magnitude: " + Impulse.magnitude + " ChargeAtRelease: " + ChargeAtRelease);
         }
     }
 
     public void AttractToPlayer(Vector3 Force)
     {
         rb.AddForce(Force);
+    }
+
+    public void SetDrag(float drag)
+    {
+        rb.drag = drag;
     }
 }

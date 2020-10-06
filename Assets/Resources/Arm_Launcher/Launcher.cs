@@ -15,11 +15,6 @@ public class Launcher : MonoBehaviour
         NONE
     }
 
-    EAttractState AttractState;
-    RaycastHit HitBall;
-    Ball LockedBall;
-
-    LineRenderer LockOnLine;
 
     [SerializeField]
     private GameObject LauncherBase;
@@ -33,10 +28,19 @@ public class Launcher : MonoBehaviour
     [SerializeField]
     private TextMeshPro ChargeIndicator;
 
-    Vector3 BaseOrigin = new Vector3(0, 0, 0);
+
+    //Launch platform positions
     Vector3 inner = new Vector3(0.01097f, 0.0f, 0.0f);
     Vector3 outer = new Vector3(0.01592f, 0.0f, 0.0f);
+
+
+
+    //Arm shake on charge
+    Vector3 BaseOrigin = new Vector3(0, 0, 0);
     float ShakeOffsett = 0.0f;
+
+
+    //---- Charging ----//
 
     bool IsCharging = false;
     bool JustReleasedCharge = false;
@@ -52,14 +56,38 @@ public class Launcher : MonoBehaviour
 
     //Platform is placed on outer position instantaneously when charge is released. 
     //Release duration is to fake an actual forward thrust that takes time.
-    const float ReleaseDuration = 0.2f; 
+    const float ReleaseDuration = 0.2f;
 
+    //---/Charging ----//
+
+    //---- Attracting ball ----//
+    EAttractState AttractState;
+    RaycastHit HitBall;
+    Ball LockedBall;
+
+    float DistanceToBall;
+    float Distance_ThreeQuarterToBall;
+
+    Vector3 AimPoint;
+    Vector3 BallToAimPoint;
+
+    Vector3 LauncherFront;
+    Vector3 BallToLauncerFront;
+
+    float PowerScalar = 5.0f;
+
+
+
+
+
+    //Drawing lines for visualizing aiming and attracting ball
+    LineRenderer Line;
 
     // Start is called before the first frame update
     void Start()
     {
         AttractState = EAttractState.NONE;
-        LockOnLine = GetComponent<LineRenderer>();
+        Line = GetComponent<LineRenderer>();
     }
 
     // Update is called once per frame
@@ -73,16 +101,25 @@ public class Launcher : MonoBehaviour
 
         if (OVRInput.GetUp(OVRInput.Button.SecondaryIndexTrigger))
         {
+            Debug.Log("OnTriggerRelease | ChargeLevel: " + ChargeLevel);
+
             ChargeAtRelease = ChargeLevel;
+            ChargeLevel = 0;
+
+
 
             IsCharging = false;
             JustReleasedCharge = true;
 
             LauncherBase.transform.localPosition = BaseOrigin;
 
-            ChargeLevel = 0;
+            
             ReleaseStopTime = Time.time + ReleaseDuration;
             Platform.transform.localPosition = outer;
+
+            AttractState = EAttractState.NONE;
+            LockedBall = null;
+
         }
 
         //------------------Attract
@@ -97,9 +134,9 @@ public class Launcher : MonoBehaviour
         if (AttractState == EAttractState.LOCKING)
         {
             //Draw line to aim
-            LockOnLine.enabled = true;
-            LockOnLine.SetPosition(0, transform.position);
-            LockOnLine.SetPosition(1, transform.position + transform.forward * 700);
+            Line.enabled = true;
+            Line.SetPosition(0, transform.position);
+            Line.SetPosition(1, transform.position + transform.forward * 700);
 
             //If locked on ball
             if (Physics.Raycast(transform.position, transform.forward, out HitBall, Mathf.Infinity, 1 << 11))
@@ -110,13 +147,43 @@ public class Launcher : MonoBehaviour
 
                 //Launcher
                 AttractState = EAttractState.ATTRACTING;
-                LockOnLine.enabled = false;
+                Line.enabled = false;
             }
         }
 
         else if (AttractState == EAttractState.ATTRACTING && LockedBall)
         {
-            LockedBall.AttractToPlayer((transform.position - LockedBall.transform.position).normalized * 10);
+            DistanceToBall = (LockedBall.transform.position - transform.position).magnitude;
+            Distance_ThreeQuarterToBall = DistanceToBall / 1.5f;
+            AimPoint = transform.position + transform.forward * Distance_ThreeQuarterToBall;
+            BallToAimPoint = AimPoint - LockedBall.transform.position;
+
+            LauncherFront = transform.position + transform.forward * 5;
+
+            BallToLauncerFront = LauncherFront - LockedBall.transform.position;
+
+            DistanceToBall = (LauncherFront - LockedBall.transform.position).magnitude;
+
+            //Draw visualization
+            Line.SetPosition(0, LockedBall.transform.position);
+            Line.SetPosition(1, AimPoint);
+            Line.enabled = true;
+
+            //LockedBall.AttractToPlayer((transform.position - LockedBall.transform.position).normalized * 10);
+            //
+
+            if (DistanceToBall > 20)
+            {
+                LockedBall.AttractToPlayer((BallToAimPoint + BallToLauncerFront).normalized * 10);
+            }
+
+            else
+            {
+                LockedBall.SetDrag(5 / DistanceToBall);
+                LockedBall.AttractToPlayer(BallToAimPoint.normalized * 10);
+            }
+
+            
         }
 
         else if (AttractState == EAttractState.NONE)
@@ -127,7 +194,7 @@ public class Launcher : MonoBehaviour
                 LockedBall = null;
             }
 
-            LockOnLine.enabled = false;
+            Line.enabled = false;
         }
 
 
@@ -168,6 +235,6 @@ public class Launcher : MonoBehaviour
 
     public void ShootBall(Collider other)
     {
-        other.GetComponent<Ball>().Shoot(transform.forward * (100.0f + (ChargeAtRelease * 2000)));
+        other.GetComponent<Ball>().Shoot(transform.forward * (100.0f + (ChargeAtRelease * 2000)), ChargeAtRelease);
     }
 }
