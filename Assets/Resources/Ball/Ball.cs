@@ -13,11 +13,7 @@ public class Ball : MonoBehaviour
         FREE
     }
 
-    Rigidbody rb;
-
-    [SerializeField]
-    private EBallState stateFromEditor;
-    
+    Rigidbody rb;  
 
     EBallState state;
 
@@ -33,8 +29,11 @@ public class Ball : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
+    }
 
-        SetState(stateFromEditor);
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
     }
 
     // Update is called once per frame
@@ -86,7 +85,7 @@ public class Ball : MonoBehaviour
         }
     }
 
-    public void Shoot(Vector3 Impulse, float ChargeAtRelease)
+    public void Shoot(Vector3 Impulse)
     {
         
         //Because overlaps register multiple times per shot. TODO: Find smarte solution for this later
@@ -94,6 +93,7 @@ public class Ball : MonoBehaviour
         {
             NextShot = Time.time + 0.2f;
 
+            rb.useGravity = true;
             SetState(EBallState.FREE);
             rb.velocity = new Vector3(0, 0, 0);
             rb.AddForce(Impulse);

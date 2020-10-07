@@ -235,6 +235,6 @@ public class Launcher : MonoBehaviour
 
     public void ShootBall(Collider other)
     {
-        other.GetComponent<Ball>().Shoot(transform.forward * (100.0f + (ChargeAtRelease * 2000)), ChargeAtRelease);
+        other.GetComponent<Ball>().Shoot(transform.forward * (100.0f + (ChargeAtRelease * 2000)));
     }
 }

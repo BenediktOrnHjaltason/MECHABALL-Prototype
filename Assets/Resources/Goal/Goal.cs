@@ -30,9 +30,7 @@ public class Goal : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        RotationIncrement++;
-
-        Parent.transform.rotation = Quaternion.Euler(new Vector3(Parent.transform.rotation.eulerAngles.x, RotationIncrement, Parent.transform.rotation.eulerAngles.z));
+    //   Parent.transform.rotation = Quaternion.Euler(new Vector3(Parent.transform.rotation.eulerAngles.x, ++RotationIncrement, Parent.transform.rotation.eulerAngles.z));
     }
 
     private void OnTriggerEnter(Collider other)
