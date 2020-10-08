@@ -14,7 +14,7 @@ public class Ball : MonoBehaviour
         FREE
     }
 
-    Rigidbody rb;  
+    Rigidbody rb;
 
     EBallState state;
 
@@ -125,5 +125,10 @@ public class Ball : MonoBehaviour
     public void SetDrag(float drag)
     {
         rb.drag = drag;
+    }
+
+    public void SetVelocity(Vector3 velocity)
+    {
+        rb.velocity = velocity;
     }
 }

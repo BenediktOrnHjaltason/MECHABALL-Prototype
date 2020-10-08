@@ -37,6 +37,9 @@ public class CatchersMitt : MonoBehaviour
         else if (!TriggerIsDown && CaughtBall)
         {
             CaughtBall.SetState(Ball.EBallState.FREE);
+
+            CaughtBall.SetVelocity(OVRInput.GetLocalControllerVelocity(OVRInput.Controller.LTouch) * 2);
+
             CaughtBall = null;
         }
     }
