@@ -1,8 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Security.Policy;
 using TMPro;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class Launcher : MonoBehaviour
@@ -17,16 +15,21 @@ public class Launcher : MonoBehaviour
 
 
     [SerializeField]
-    private GameObject LauncherBase;
+    GameObject LauncherBase;
 
     [SerializeField]
-    private GameObject Platform;
+    GameObject Platform;
 
     [SerializeField]
-    private Component RightHandAnchor;
+    Component RightHandAnchor;
 
     [SerializeField]
-    private TextMeshPro ChargeIndicator;
+    TextMeshPro ChargeIndicator;
+
+    [SerializeField]
+    LineRenderer LineRenderAttract;
+
+    LineRenderer LineRenderLaunchAim;
 
 
     //Launch platform positions
@@ -77,17 +80,14 @@ public class Launcher : MonoBehaviour
     float PowerScalar = 5.0f;
 
 
-
-
-
-    //Drawing lines for visualizing aiming and attracting ball
-    LineRenderer Line;
-
     // Start is called before the first frame update
     void Start()
     {
         AttractState = EAttractState.NONE;
-        Line = GetComponent<LineRenderer>();
+        //LineRenderAttract = GetComponent<LineRenderAttractRenderer>();
+
+        LineRenderLaunchAim = Platform.GetComponent<LineRenderer>();
+        LineRenderLaunchAim.enabled = false;
     }
 
     // Update is called once per frame
@@ -97,7 +97,11 @@ public class Launcher : MonoBehaviour
         transform.SetPositionAndRotation(RightHandAnchor.transform.position, RightHandAnchor.transform.rotation);
 
         //Trigger button
-        if (OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger)) IsCharging = true;
+        if (OVRInput.GetDown(OVRInput.Button.SecondaryIndexTrigger))
+        {
+            IsCharging = true;
+            LineRenderLaunchAim.enabled = true;
+        }
 
         if (OVRInput.GetUp(OVRInput.Button.SecondaryIndexTrigger))
         {
@@ -120,6 +124,8 @@ public class Launcher : MonoBehaviour
             AttractState = EAttractState.NONE;
             LockedBall = null;
 
+            LineRenderLaunchAim.enabled = false;
+
         }
 
         //------------------Attract
@@ -133,10 +139,10 @@ public class Launcher : MonoBehaviour
         //Look for lock hit
         if (AttractState == EAttractState.LOCKING)
         {
-            //Draw line to aim
-            Line.enabled = true;
-            Line.SetPosition(0, transform.position);
-            Line.SetPosition(1, transform.position + transform.forward * 700);
+            //Draw LineRenderAttractRenderAttract to aim
+            LineRenderAttract.enabled = true;
+            LineRenderAttract.SetPosition(0, transform.position);
+            LineRenderAttract.SetPosition(1, transform.position + transform.forward * 700);
 
             //If locked on ball
             if (Physics.Raycast(transform.position, transform.forward, out HitBall, Mathf.Infinity, 1 << 11))
@@ -147,12 +153,19 @@ public class Launcher : MonoBehaviour
 
                 //Launcher
                 AttractState = EAttractState.ATTRACTING;
-                Line.enabled = false;
+                LineRenderAttract.enabled = false;
             }
         }
 
         else if (AttractState == EAttractState.ATTRACTING && LockedBall)
         {
+            //Draw visualization
+            LineRenderAttract.SetPosition(0, LockedBall.transform.position);
+            LineRenderAttract.SetPosition(1, AimPoint);
+            LineRenderAttract.enabled = true;
+
+
+
             DistanceToBall = (LockedBall.transform.position - transform.position).magnitude;
             Distance_ThreeQuarterToBall = DistanceToBall / 1.5f;
             AimPoint = transform.position + transform.forward * Distance_ThreeQuarterToBall;
@@ -164,37 +177,39 @@ public class Launcher : MonoBehaviour
 
             DistanceToBall = (LauncherFront - LockedBall.transform.position).magnitude;
 
-            //Draw visualization
-            Line.SetPosition(0, LockedBall.transform.position);
-            Line.SetPosition(1, AimPoint);
-            Line.enabled = true;
 
-            //LockedBall.AttractToPlayer((transform.position - LockedBall.transform.position).normalized * 10);
-            //
+            //if (LockedBall.GetState() != Ball.EBallState.HELDBYCATCHER)
+            //{
 
-            if (DistanceToBall > 20)
-            {
-                LockedBall.AttractToPlayer((BallToAimPoint + BallToLauncerFront).normalized * 10);
-            }
+                //LockedBall.AttractToPlayer((transform.position - LockedBall.transform.position).normalized * 10);
+                //
 
-            else
-            {
-                LockedBall.SetDrag(5 / DistanceToBall);
-                LockedBall.AttractToPlayer(BallToAimPoint.normalized * 10);
-            }
+                if (DistanceToBall > 20)
+                {
+                    LockedBall.AttractToPlayer((BallToAimPoint + BallToLauncerFront).normalized * 10);
+                }
 
-            
+                else
+                {
+                    LockedBall.SetDrag(5 / DistanceToBall);
+                    LockedBall.AttractToPlayer(BallToAimPoint.normalized * 10);
+                }
+            //}
+
         }
 
         else if (AttractState == EAttractState.NONE)
         {
             if(LockedBall)
             {
-                LockedBall.SetState(Ball.EBallState.FREE);
+                if (LockedBall.GetState() != Ball.EBallState.HELDBYCATCHER)
+                    LockedBall.SetState(Ball.EBallState.FREE);
+
+
                 LockedBall = null;
             }
 
-            Line.enabled = false;
+            LineRenderAttract.enabled = false;
         }
 
 
@@ -216,6 +231,9 @@ public class Launcher : MonoBehaviour
                                                                 -ShakeOffsett,
                                                                 0.0f);
             Platform.transform.localPosition = Vector3.Lerp(outer, inner, ChargeLevel);
+
+            LineRenderLaunchAim.SetPosition(0, transform.position);
+            LineRenderLaunchAim.SetPosition(1, transform.position + (transform.forward * 5 * ChargeLevel));
          }
 
         else 

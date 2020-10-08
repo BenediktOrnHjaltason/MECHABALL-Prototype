@@ -10,6 +10,7 @@ public class Ball : MonoBehaviour
         STARTHOVER,
         STARTSHOOTUP,
         ATTRACTTOPLAYER,
+        HELDBYCATCHER,
         FREE
     }
 
@@ -82,7 +83,21 @@ public class Ball : MonoBehaviour
                     state = newState;
                     break;
             }
+
+            case EBallState.HELDBYCATCHER:
+                {
+                    rb.useGravity = false;
+                    rb.velocity = new Vector3(0, 0, 0);
+
+                    state = newState;
+                    break;
+                }
         }
+    }
+
+    public EBallState GetState()
+    {
+        return state;
     }
 
     public void Shoot(Vector3 Impulse)
